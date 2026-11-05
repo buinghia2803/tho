@@ -11,28 +11,32 @@
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
 
+<a class="skip-link" href="#primary-content">Bỏ qua nội dung</a>
+
 <header class="site-header">
-    <div class="container header-inner">
+    <div class="site-shell">
+        <?php
+        $header_image = get_header_image();
+        if (!$header_image) {
+            $header_image = get_theme_file_uri('/assets/image/banner.jpg');
+        }
+        ?>
+        <?php if ($header_image) : ?>
+            <a class="header-banner" href="<?php echo esc_url(home_url('/')); ?>" aria-label="Về trang chủ">
+                <img src="<?php echo esc_url($header_image); ?>" alt="">
+            </a>
+        <?php endif; ?>
 
-        <div class="site-branding">
-            <?php if (has_custom_logo()) : ?>
-                <?php the_custom_logo(); ?>
-            <?php else : ?>
-                <a href="<?php echo esc_url(home_url('/')); ?>">
-                    <?php bloginfo('name'); ?>
-                </a>
-            <?php endif; ?>
+        <div class="header-branding">
+            <div class="site-branding">
+                <?php if (has_custom_logo()) : ?>
+                    <?php the_custom_logo(); ?>
+                <?php endif; ?>
+            </div>
+            <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation">
+                <span class="menu-toggle-label">Danh mục</span>
+                <span class="menu-toggle-icon" aria-hidden="true">☰</span>
+            </button>
         </div>
-
-        <nav class="main-navigation" aria-label="Menu chính">
-            <?php
-            wp_nav_menu([
-                'theme_location' => 'primary',
-                'container'      => false,
-                'fallback_cb'    => false,
-            ]);
-            ?>
-        </nav>
-
     </div>
 </header>
