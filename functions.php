@@ -130,6 +130,56 @@ function nhm_ensure_contact_page() {
 }
 add_action('init', 'nhm_ensure_contact_page', 20);
 
+/** Process public contact-form submissions through WordPress admin-post. */
+function nhm_handle_contact_form() {
+    $contact_page = get_page_by_path('lien-he', OBJECT, 'page');
+    $redirect_url = $contact_page ? get_permalink($contact_page) : home_url('/lien-he/');
+
+    if ('POST' !== $_SERVER['REQUEST_METHOD']) {
+        wp_safe_redirect($redirect_url);
+        exit;
+    }
+
+    $nonce = isset($_POST['nhm_contact_nonce'])
+        ? sanitize_text_field(wp_unslash($_POST['nhm_contact_nonce']))
+        : '';
+
+    if (!wp_verify_nonce($nonce, 'nhm_contact_form')) {
+        $status = 'error';
+    } elseif (!empty($_POST['website'])) {
+        // Silently accept honeypot submissions without sending email.
+        $status = 'success';
+    } else {
+        $name = isset($_POST['name']) ? sanitize_text_field(wp_unslash($_POST['name'])) : '';
+        $unit = isset($_POST['unit']) ? sanitize_text_field(wp_unslash($_POST['unit'])) : '';
+        $address = isset($_POST['address']) ? sanitize_textarea_field(wp_unslash($_POST['address'])) : '';
+        $phone = isset($_POST['phone']) ? sanitize_text_field(wp_unslash($_POST['phone'])) : '';
+        $email = isset($_POST['email']) ? sanitize_email(wp_unslash($_POST['email'])) : '';
+        $message = isset($_POST['message']) ? sanitize_textarea_field(wp_unslash($_POST['message'])) : '';
+
+        if ('' === $name || '' === $phone || !is_email($email) || '' === $message) {
+            $status = 'validation';
+        } else {
+            $admin_email = sanitize_email(get_option('admin_email'));
+            $subject = sprintf('Liên hệ website: %s', $name);
+            $body = "Họ tên: {$name}\n";
+            $body .= "Đơn vị: {$unit}\n";
+            $body .= "Địa chỉ: {$address}\n";
+            $body .= "Điện thoại: {$phone}\n";
+            $body .= "Email: {$email}\n\n";
+            $body .= "Lời nhắn:\n{$message}\n";
+            $headers = ['Reply-To: ' . $name . ' <' . $email . '>'];
+
+            $status = wp_mail($admin_email, $subject, $body, $headers) ? 'success' : 'error';
+        }
+    }
+
+    wp_safe_redirect(add_query_arg('contact_status', $status, $redirect_url));
+    exit;
+}
+add_action('admin_post_nopriv_nhm_submit_contact', 'nhm_handle_contact_form');
+add_action('admin_post_nhm_submit_contact', 'nhm_handle_contact_form');
+
 /** Register editable widget areas displayed in the two sidebars. */
 function nhm_register_sidebars() {
     register_sidebar([

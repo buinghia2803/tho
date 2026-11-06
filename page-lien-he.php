@@ -3,51 +3,9 @@
  * Template Name: Liên hệ
  */
 
-$contact_status = '';
-$contact_values = [
-    'name'    => '',
-    'unit'    => '',
-    'address' => '',
-    'phone'   => '',
-    'email'   => '',
-    'message' => '',
-];
-
-if ('POST' === $_SERVER['REQUEST_METHOD'] && isset($_POST['nhm_contact_submit'])) {
-    foreach ($contact_values as $field => $default) {
-        if (isset($_POST[$field])) {
-            $raw_value = wp_unslash($_POST[$field]);
-            $contact_values[$field] = 'message' === $field || 'address' === $field
-                ? sanitize_textarea_field($raw_value)
-                : sanitize_text_field($raw_value);
-        }
-    }
-    $contact_values['email'] = sanitize_email($contact_values['email']);
-
-    if (!isset($_POST['nhm_contact_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nhm_contact_nonce'])), 'nhm_contact_form')) {
-        $contact_status = 'error';
-    } elseif ('' !== ($_POST['website'] ?? '')) {
-        // Silently reject bot submissions caught by the hidden honeypot field.
-        $contact_status = 'success';
-    } elseif ('' === $contact_values['name'] || '' === $contact_values['phone'] || !is_email($contact_values['email']) || '' === $contact_values['message']) {
-        $contact_status = 'validation';
-    } else {
-        $admin_email = sanitize_email(get_option('admin_email'));
-        $subject = sprintf('Liên hệ website: %s', $contact_values['name']);
-        $body = "Họ tên: {$contact_values['name']}\n";
-        $body .= "Đơn vị: {$contact_values['unit']}\n";
-        $body .= "Địa chỉ: {$contact_values['address']}\n";
-        $body .= "Điện thoại: {$contact_values['phone']}\n";
-        $body .= "Email: {$contact_values['email']}\n\n";
-        $body .= "Lời nhắn:\n{$contact_values['message']}\n";
-        $headers = ['Reply-To: ' . $contact_values['name'] . ' <' . $contact_values['email'] . '>'];
-
-        $contact_status = wp_mail($admin_email, $subject, $body, $headers) ? 'success' : 'error';
-        if ('success' === $contact_status) {
-            $contact_values = array_fill_keys(array_keys($contact_values), '');
-        }
-    }
-}
+$contact_status = isset($_GET['contact_status'])
+    ? sanitize_key(wp_unslash($_GET['contact_status']))
+    : '';
 
 get_header();
 ?>
@@ -75,7 +33,8 @@ get_header();
                 <p class="contact-notice contact-notice-error" role="alert">Chưa gửi được lời nhắn. Vui lòng thử lại sau.</p>
             <?php endif; ?>
 
-            <form class="contact-form" method="post" action="">
+            <form class="contact-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                <input type="hidden" name="action" value="nhm_submit_contact">
                 <?php wp_nonce_field('nhm_contact_form', 'nhm_contact_nonce'); ?>
                 <div class="contact-honeypot" aria-hidden="true">
                     <label for="contact-website">Để trống trường này</label>
@@ -84,30 +43,30 @@ get_header();
 
                 <div class="contact-form-row">
                     <label for="contact-name">Họ tên <span>(*)</span></label>
-                    <input id="contact-name" name="name" type="text" value="<?php echo esc_attr($contact_values['name']); ?>" required>
+                    <input id="contact-name" name="name" type="text" required>
                 </div>
                 <div class="contact-form-row">
                     <label for="contact-unit">Đơn vị</label>
-                    <input id="contact-unit" name="unit" type="text" value="<?php echo esc_attr($contact_values['unit']); ?>">
+                    <input id="contact-unit" name="unit" type="text">
                 </div>
                 <div class="contact-form-row contact-form-row-textarea">
                     <label for="contact-address">Địa chỉ</label>
-                    <textarea id="contact-address" name="address" rows="2"><?php echo esc_textarea($contact_values['address']); ?></textarea>
+                    <textarea id="contact-address" name="address" rows="2"></textarea>
                 </div>
                 <div class="contact-form-row">
                     <label for="contact-phone">Điện thoại <span>(*)</span></label>
-                    <input id="contact-phone" name="phone" type="tel" value="<?php echo esc_attr($contact_values['phone']); ?>" required>
+                    <input id="contact-phone" name="phone" type="tel" required>
                 </div>
                 <div class="contact-form-row">
                     <label for="contact-email">Email <span>(*)</span></label>
-                    <input id="contact-email" name="email" type="email" value="<?php echo esc_attr($contact_values['email']); ?>" required>
+                    <input id="contact-email" name="email" type="email" required>
                 </div>
                 <div class="contact-form-row contact-form-row-textarea">
                     <label for="contact-message">Lời nhắn <span>(*)</span></label>
-                    <textarea id="contact-message" name="message" rows="6" required><?php echo esc_textarea($contact_values['message']); ?></textarea>
+                    <textarea id="contact-message" name="message" rows="6" required></textarea>
                 </div>
                 <div class="contact-form-actions">
-                    <button type="submit" name="nhm_contact_submit" value="1">Gửi liên hệ</button>
+                    <button type="submit">Gửi liên hệ</button>
                     <button type="reset" class="contact-reset-button">Soạn lại</button>
                 </div>
             </form>
