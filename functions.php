@@ -248,7 +248,7 @@ function nhm_customize_register($wp_customize) {
         ],
         'nhm_contact_phone' => [
             'label'   => 'Số điện thoại liên hệ',
-            'default' => '',
+            'default' => '0913.304.113',
             'type'    => 'text',
         ],
         'nhm_contact_email' => [
@@ -334,3 +334,16 @@ function nhm_flush_photo_rewrite_rules_once() {
     update_option('nhm_photo_rewrite_rules_flushed', 1, false);
 }
 add_action('init', 'nhm_flush_photo_rewrite_rules_once', 99);
+
+/** Configure main query for photo_category taxonomy archives: 30 images per page with pagination. */
+function nhm_photo_category_pre_get_posts($query) {
+    if (!is_admin() && $query->is_main_query() && $query->is_tax('photo_category')) {
+        $query->set('post_type', 'attachment');
+        $query->set('post_status', 'inherit');
+        $query->set('post_mime_type', 'image');
+        $query->set('posts_per_page', 30);
+        $query->set('orderby', 'menu_order ID');
+        $query->set('order', 'ASC');
+    }
+}
+add_action('pre_get_posts', 'nhm_photo_category_pre_get_posts');

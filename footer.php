@@ -4,20 +4,21 @@
         <?php if (is_active_sidebar('footer')) : ?>
             <div class="footer-widgets"><?php dynamic_sidebar('footer'); ?></div>
         <?php endif; ?>
-        <p class="footer-copyright">
-            <?php echo esc_html(get_theme_mod('nhm_footer_copyright', 'Bản quyền thuộc sở hữu trí tuệ của ' . get_bloginfo('name'))); ?>
-        </p>
         <?php
-        $phone = get_theme_mod('nhm_contact_phone');
-        $email = get_theme_mod('nhm_contact_email');
-        if ($phone || $email) :
+        $copyright = 'Bản quyền thuộc sở hữu trí tuệ của Nhà thơ Nguyễn Hồng Minh';
+        $phone = '091 330 4113';
+        $email = 'Nguyenhongminhtho@gmail.com';
         ?>
+        <p class="footer-copyright">
+            <?php echo esc_html($copyright); ?>
+        </p>
+        <?php if ($phone || $email) : ?>
             <p class="footer-contact">
                 <?php if ($phone) : ?>
-                    <span>Điện thoại: <a href="tel:<?php echo esc_attr(preg_replace('/[^0-9+]/', '', $phone)); ?>"><?php echo esc_html($phone); ?></a></span>
+                    <span>Điện thoại: <?php echo esc_html($phone); ?></span>
                 <?php endif; ?>
                 <?php if ($email) : ?>
-                    <span>Email: <a href="mailto:<?php echo esc_attr($email); ?>"><?php echo esc_html($email); ?></a></span>
+                    <span>Email: <?php echo esc_html($email); ?></span>
                 <?php endif; ?>
             </p>
         <?php endif; ?>

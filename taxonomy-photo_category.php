@@ -13,25 +13,9 @@
             <p class="photo-category-total">Tổng số ảnh: <?php echo esc_html((string) nhm_get_photo_category_image_count($current_category->term_id)); ?></p>
         </header>
 
-        <?php
-        $photo_query = new WP_Query([
-            'post_type'      => 'attachment',
-            'post_status'    => 'inherit',
-            'post_mime_type' => 'image',
-            'posts_per_page' => -1,
-            'orderby'        => 'menu_order ID',
-            'order'          => 'ASC',
-            'tax_query'      => [[
-                'taxonomy' => 'photo_category',
-                'field'    => 'term_id',
-                'terms'    => $current_category->term_id,
-            ]],
-        ]);
-        ?>
-
-        <?php if ($photo_query->have_posts()) : ?>
+        <?php if (have_posts()) : ?>
             <div class="photo-gallery-grid">
-                <?php while ($photo_query->have_posts()) : $photo_query->the_post(); ?>
+                <?php while (have_posts()) : the_post(); ?>
                     <figure class="photo-gallery-item">
                         <a href="<?php echo esc_url(wp_get_attachment_image_url(get_the_ID(), 'full')); ?>" target="_blank" rel="noopener">
                             <?php echo wp_get_attachment_image(get_the_ID(), 'medium_large', false, ['loading' => 'lazy']); ?>
@@ -39,10 +23,11 @@
                     </figure>
                 <?php endwhile; ?>
             </div>
+
+            <?php the_posts_pagination(['mid_size' => 1, 'prev_text' => '← Trước', 'next_text' => 'Sau →']); ?>
         <?php else : ?>
             <p>Danh mục này hiện chưa có ảnh.</p>
         <?php endif; ?>
-        <?php wp_reset_postdata(); ?>
         <?php get_template_part('template-parts/recent-posts'); ?>
     </main>
 
